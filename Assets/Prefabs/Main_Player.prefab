@@ -271,6 +271,7 @@ MonoBehaviour:
   jumpForce: 15
   jumpCooldown: 1
   airMultiplier: 0.4
+  crouchYScale: 0.5
   sprintSpeed: 20
   crouchSpeed: 3.5
   jumpKey: 32

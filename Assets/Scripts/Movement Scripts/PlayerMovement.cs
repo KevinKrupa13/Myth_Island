@@ -4,7 +4,8 @@ using UnityEngine;
 using TMPro;
 using Unity.Netcode;
 
-public class PlayerMovement : NetworkBehaviour {
+public class PlayerMovement : NetworkBehaviour
+{
     [Header("Animation")]
     public Animator playerAnim;
 
@@ -17,7 +18,10 @@ public class PlayerMovement : NetworkBehaviour {
 
     [Header("Crouching")]
 
-    [Header("Movement Speeds")] 
+    public float crouchYScale;
+    private float startYScale;
+
+    [Header("Movement Speeds")]
     public float sprintSpeed;
     public float crouchSpeed;
 
@@ -52,6 +56,7 @@ public class PlayerMovement : NetworkBehaviour {
         capsule = GetComponent<CapsuleCollider>();
         rb.freezeRotation = true;
         readyToJump = true;
+        startYScale = transform.localScale.y;
     }
 
     private void Update()
@@ -83,8 +88,8 @@ public class PlayerMovement : NetworkBehaviour {
         verticalInput = Input.GetAxisRaw("Vertical");
 
         // when to jump
-        
-        if(Input.GetKey(jumpKey) && readyToJump && grounded)
+
+        if (Input.GetKey(jumpKey) && readyToJump && grounded)
         {
             readyToJump = false;
 
@@ -95,9 +100,16 @@ public class PlayerMovement : NetworkBehaviour {
 
         sprinting = Input.GetKey(sprintKey);
 
-        if (Input.GetKeyDown(crouchKey)) {
+        if (Input.GetKeyDown(crouchKey))
+        {
             crouching = true;
-        } else if (Input.GetKeyUp(crouchKey)) {
+            transform.localScale = new Vector3(transform.localScale.x, crouchYScale, transform.localScale.z);
+            rb.AddForce(Vector3.down * 5f, ForceMode.Impulse);
+        }
+        else if (Input.GetKeyUp(crouchKey))
+        {
+            playerAnim.ResetTrigger("crouch_idle");
+            transform.localScale = new Vector3(transform.localScale.x, startYScale, transform.localScale.z);
             crouching = false;
         }
     }
@@ -108,78 +120,110 @@ public class PlayerMovement : NetworkBehaviour {
         moveDirection = orientation.forward * verticalInput + orientation.right * horizontalInput;
 
         // on ground
-        if(grounded) {
-            if (sprinting && !crouching) {
+        if (grounded)
+        {
+            if (sprinting && !crouching)
+            {
                 rb.AddForce(moveDirection.normalized * sprintSpeed * 10f, ForceMode.Force);
-            } else if (crouching && !sprinting) {
+            }
+            else if (crouching && !sprinting)
+            {
                 rb.AddForce(moveDirection.normalized * crouchSpeed * 10f, ForceMode.Force);
-            } else {
+            }
+            else
+            {
                 rb.AddForce(moveDirection.normalized * moveSpeed * 10f, ForceMode.Force);
             }
-            
+
         }
 
         // in air
-        else if(!grounded) {
-            if (sprinting) {
+        else if (!grounded)
+        {
+            if (sprinting)
+            {
                 rb.AddForce(moveDirection.normalized * moveSpeed * 10f * sprintSpeed * airMultiplier, ForceMode.Force);
-            } else {
+            }
+            else
+            {
                 rb.AddForce(moveDirection.normalized * moveSpeed * 10f * airMultiplier, ForceMode.Force);
             }
         }
     }
 
-    private void AnimatePlayer() {
+    private void AnimatePlayer()
+    {
 
         if (!IsOwner) return;
-        if (verticalInput > 0 && !playerAnim.GetBool("sprint")) {
+        if (verticalInput > 0 && !playerAnim.GetBool("sprint"))
+        {
             playerAnim.SetTrigger("jog_forward");
             playerAnim.ResetTrigger("idle");
             walking = true;
         }
-        if (verticalInput < 0) {
+        if (verticalInput < 0)
+        {
             playerAnim.SetTrigger("jog_backward");
             playerAnim.ResetTrigger("idle");
             walking = true;
         }
-        if (verticalInput == 0) {
+        if (verticalInput == 0)
+        {
             playerAnim.SetTrigger("idle");
             playerAnim.ResetTrigger("jog_forward");
             playerAnim.ResetTrigger("jog_backward");
             walking = false;
         }
-        if (horizontalInput > 0) {
+        if (horizontalInput > 0)
+        {
             playerAnim.SetTrigger("strafe_right");
             playerAnim.ResetTrigger("idle");
         }
-        if (horizontalInput < 0) {
+        if (horizontalInput < 0)
+        {
             playerAnim.SetTrigger("strafe_left");
             playerAnim.ResetTrigger("idle");
         }
-        if (horizontalInput == 0) {
+        if (horizontalInput == 0)
+        {
             playerAnim.SetTrigger("idle");
             playerAnim.ResetTrigger("strafe_left");
             playerAnim.ResetTrigger("strafe_right");
         }
-        if (walking && !playerAnim.GetBool("jog_backward")) {
-            if (sprinting) {
+        if (walking && !playerAnim.GetBool("jog_backward"))
+        {
+            if (sprinting)
+            {
                 playerAnim.SetTrigger("sprint");
                 playerAnim.ResetTrigger("jog_forward");
             }
-            if (!sprinting) {
+            if (!sprinting)
+            {
                 playerAnim.SetTrigger("jog_forward");
                 playerAnim.ResetTrigger("sprint");
             }
         }
-        if (jumping) {
+        if (jumping)
+        {
             playerAnim.SetTrigger("jump");
             playerAnim.ResetTrigger("idle");
             playerAnim.ResetTrigger("jog_forward");
             playerAnim.ResetTrigger("jog_backward");
             playerAnim.ResetTrigger("sprint");
         }
-        if (!jumping) {
+        if (!jumping)
+        {
             playerAnim.ResetTrigger("jump");
+        }
+        if (crouching && grounded)
+        {
+            //idle crouching
+            if (!walking && !sprinting)
+            {
+                playerAnim.SetTrigger("crouch_idle");
+                playerAnim.ResetTrigger("idle");
+            }
+
         }
 
     }
@@ -189,7 +233,7 @@ public class PlayerMovement : NetworkBehaviour {
         Vector3 flatVel = new Vector3(rb.velocity.x, 0f, rb.velocity.z);
 
         // limit velocity if needed
-        if(flatVel.magnitude > moveSpeed)
+        if (flatVel.magnitude > moveSpeed)
         {
             Vector3 limitedVel = flatVel.normalized * moveSpeed;
             rb.velocity = new Vector3(limitedVel.x, rb.velocity.y, limitedVel.z);
