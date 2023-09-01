@@ -38,6 +38,7 @@ public class PlayerMovement : NetworkBehaviour {
     float verticalInput;
     Vector3 moveDirection;
     Rigidbody rb;
+    CapsuleCollider capsule;
 
     bool readyToJump = false;
     bool sprinting = false;
@@ -48,6 +49,7 @@ public class PlayerMovement : NetworkBehaviour {
     private void Start()
     {
         rb = GetComponent<Rigidbody>();
+        capsule = GetComponent<CapsuleCollider>();
         rb.freezeRotation = true;
         readyToJump = true;
     }
@@ -108,9 +110,9 @@ public class PlayerMovement : NetworkBehaviour {
         // on ground
         if(grounded) {
             if (sprinting && !crouching) {
-                rb.AddForce(moveDirection.normalized * moveSpeed * 10f * sprintSpeed, ForceMode.Force);
+                rb.AddForce(moveDirection.normalized * sprintSpeed * 10f, ForceMode.Force);
             } else if (crouching && !sprinting) {
-                rb.AddForce(moveDirection.normalized * moveSpeed * 10f * crouchSpeed, ForceMode.Force);
+                rb.AddForce(moveDirection.normalized * crouchSpeed * 10f, ForceMode.Force);
             } else {
                 rb.AddForce(moveDirection.normalized * moveSpeed * 10f, ForceMode.Force);
             }
@@ -198,8 +200,7 @@ public class PlayerMovement : NetworkBehaviour {
     {
         // reset y velocity
         jumping = true;
-        rb.velocity = new Vector3(rb.velocity.x, 0f, rb.velocity.z);
-
+        //rb.velocity = new Vector3(rb.velocity.x, 0f, rb.velocity.z);
         rb.AddForce(transform.up * jumpForce, ForceMode.Impulse);
     }
 
