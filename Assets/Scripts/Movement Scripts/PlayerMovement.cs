@@ -100,6 +100,7 @@ public class PlayerMovement : NetworkBehaviour
 
         sprinting = Input.GetKey(sprintKey);
 
+        //Crouching Controls
         if (Input.GetKeyDown(crouchKey))
         {
             crouching = true;
