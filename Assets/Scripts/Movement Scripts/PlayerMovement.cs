@@ -6,9 +6,6 @@ using Unity.Netcode;
 
 public class PlayerMovement : NetworkBehaviour
 {
-    [Header("Animation")]
-    public Animator playerAnim;
-
     [Header("Movement")]
     public float moveSpeed;
     public float groundDrag;
@@ -43,6 +40,10 @@ public class PlayerMovement : NetworkBehaviour
     Vector3 moveDirection;
     Rigidbody rb;
     CapsuleCollider capsule;
+    Animator playerAnim;
+
+    int moveXAnimationParameterID;
+    int moveZAnimationparameterID;
 
     bool readyToJump = false;
     bool sprinting = false;
@@ -54,6 +55,10 @@ public class PlayerMovement : NetworkBehaviour
     {
         rb = GetComponent<Rigidbody>();
         capsule = GetComponent<CapsuleCollider>();
+        playerAnim = GetComponent<Animator>();
+
+        moveXAnimationParameterID = Animator.StringToHash("MoveX");
+        moveZAnimationparameterID = Animator.StringToHash("MoveZ");
         rb.freezeRotation = true;
         readyToJump = true;
         startYScale = transform.localScale.y;
@@ -109,7 +114,6 @@ public class PlayerMovement : NetworkBehaviour
         }
         else if (Input.GetKeyUp(crouchKey))
         {
-            playerAnim.ResetTrigger("crouch_idle");
             transform.localScale = new Vector3(transform.localScale.x, startYScale, transform.localScale.z);
             crouching = false;
         }
@@ -154,79 +158,9 @@ public class PlayerMovement : NetworkBehaviour
 
     private void AnimatePlayer()
     {
-
         if (!IsOwner) return;
-        if (verticalInput > 0 && !playerAnim.GetBool("sprint"))
-        {
-            playerAnim.SetTrigger("jog_forward");
-            playerAnim.ResetTrigger("idle");
-            walking = true;
-        }
-        if (verticalInput < 0)
-        {
-            playerAnim.SetTrigger("jog_backward");
-            playerAnim.ResetTrigger("idle");
-            walking = true;
-        }
-        if (verticalInput == 0)
-        {
-            playerAnim.SetTrigger("idle");
-            playerAnim.ResetTrigger("jog_forward");
-            playerAnim.ResetTrigger("jog_backward");
-            walking = false;
-        }
-        if (horizontalInput > 0)
-        {
-            playerAnim.SetTrigger("strafe_right");
-            playerAnim.ResetTrigger("idle");
-        }
-        if (horizontalInput < 0)
-        {
-            playerAnim.SetTrigger("strafe_left");
-            playerAnim.ResetTrigger("idle");
-        }
-        if (horizontalInput == 0)
-        {
-            playerAnim.SetTrigger("idle");
-            playerAnim.ResetTrigger("strafe_left");
-            playerAnim.ResetTrigger("strafe_right");
-        }
-        if (walking && !playerAnim.GetBool("jog_backward"))
-        {
-            if (sprinting)
-            {
-                playerAnim.SetTrigger("sprint");
-                playerAnim.ResetTrigger("jog_forward");
-            }
-            if (!sprinting)
-            {
-                playerAnim.SetTrigger("jog_forward");
-                playerAnim.ResetTrigger("sprint");
-            }
-        }
-        if (jumping)
-        {
-            playerAnim.SetTrigger("jump");
-            playerAnim.ResetTrigger("idle");
-            playerAnim.ResetTrigger("jog_forward");
-            playerAnim.ResetTrigger("jog_backward");
-            playerAnim.ResetTrigger("sprint");
-        }
-        if (!jumping)
-        {
-            playerAnim.ResetTrigger("jump");
-        }
-        if (crouching && grounded)
-        {
-            //idle crouching
-            if (!walking && !sprinting)
-            {
-                playerAnim.SetTrigger("crouch_idle");
-                playerAnim.ResetTrigger("idle");
-            }
-
-        }
-
+        playerAnim.SetFloat(moveXAnimationParameterID, horizontalInput);
+        playerAnim.SetFloat(moveZAnimationparameterID, verticalInput);
     }
 
     private void SpeedControl()

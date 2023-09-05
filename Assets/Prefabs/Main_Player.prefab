@@ -426,6 +426,13 @@ MonoBehaviour:
     TransitionIndex: 5
   - IsCrossFadeExit: 0
     Layer: 0
+    OriginatingState: 2118051110
+    DestinationState: 784149677
+    TransitionDuration: 0.25
+    TriggerNameHash: 784149677
+    TransitionIndex: 6
+  - IsCrossFadeExit: 0
+    Layer: 0
     OriginatingState: 872005794
     DestinationState: 2118051110
     TransitionDuration: 0.25
@@ -508,6 +515,13 @@ MonoBehaviour:
     TransitionDuration: 0.25
     TriggerNameHash: -601574123
     TransitionIndex: 0
+  - IsCrossFadeExit: 0
+    Layer: 0
+    OriginatingState: 784149677
+    DestinationState: 2118051110
+    TransitionDuration: 0.25
+    TriggerNameHash: -601574123
+    TransitionIndex: 0
   m_Animator: {fileID: 7991163050910864994}
 --- !u!1 &7930343123820124178
 GameObject:
@@ -521,6 +535,7 @@ GameObject:
   - component: {fileID: 4153381577661341532}
   - component: {fileID: 4449378185314963645}
   - component: {fileID: 2347797386145211135}
+  - component: {fileID: 4375732047099522387}
   m_Layer: 0
   m_Name: Animation
   m_TagString: Untagged
@@ -617,6 +632,29 @@ CapsuleCollider:
   m_Height: 1.9
   m_Direction: 1
   m_Center: {x: 0, y: -0.056, z: 0}
+--- !u!136 &4375732047099522387
+CapsuleCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7930343123820124178}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 0
+  serializedVersion: 2
+  m_Radius: 0.3
+  m_Height: 1
+  m_Direction: 1
+  m_Center: {x: 0, y: -0.5, z: 0}
 --- !u!1 &8808198957443976258
 GameObject:
   m_ObjectHideFlags: 0
