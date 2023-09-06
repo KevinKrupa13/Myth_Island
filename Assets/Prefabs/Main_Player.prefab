@@ -265,13 +265,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f9717d56d080534409a36abd42059772, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  playerAnim: {fileID: 7991163050910864994}
   moveSpeed: 5
   groundDrag: 5
   jumpForce: 15
   jumpCooldown: 1
   airMultiplier: 0.4
-  crouchYScale: 0.5
+  crouchHeight: 0.75
   sprintSpeed: 20
   crouchSpeed: 3.5
   jumpKey: 32

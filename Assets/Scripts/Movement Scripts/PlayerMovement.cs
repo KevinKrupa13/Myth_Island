@@ -51,7 +51,8 @@ public class PlayerMovement : NetworkBehaviour
     bool jumping = false;
     bool crouching = false;
 
-    enum state {
+    enum state
+    {
         walking,
         sprinting,
         crouching,
@@ -114,11 +115,13 @@ public class PlayerMovement : NetworkBehaviour
             Invoke(nameof(ResetJump), jumpCooldown);
         }
 
-        if (Input.GetKeyDown(sprintKey)) {
+        if (Input.GetKeyDown(sprintKey))
+        {
             currState = state.sprinting;
         }
 
-        if (Input.GetKeyUp(sprintKey)) {
+        if (Input.GetKeyUp(sprintKey))
+        {
             currState = state.walking;
         }
 
@@ -126,13 +129,14 @@ public class PlayerMovement : NetworkBehaviour
         if (Input.GetKeyDown(crouchKey))
         {
             currState = state.crouching;
-            //capsule.height = crouchHeight;
-            //rb.AddForce(Vector3.down * 5f, ForceMode.Impulse);
+            capsule.height = crouchHeight;
+            capsule.center = new Vector3(0, capsule.height * 0.5f);
         }
         else if (Input.GetKeyUp(crouchKey))
         {
-            //capsule.height = startHeight;
             currState = state.walking;
+            capsule.height = startHeight;
+            capsule.center = new Vector3(0, capsule.height * 0.5f);
         }
     }
 
@@ -178,7 +182,7 @@ public class PlayerMovement : NetworkBehaviour
         if (!IsOwner) return;
         playerAnim.SetFloat(moveXAnimationParameterID, horizontalInput);
         playerAnim.SetFloat(moveZAnimationparameterID, verticalInput);
-        playerAnim.SetFloat(stateAnimationParameterID, (int) currState);
+        playerAnim.SetFloat(stateAnimationParameterID, (int)currState);
     }
 
     private void SpeedControl()
