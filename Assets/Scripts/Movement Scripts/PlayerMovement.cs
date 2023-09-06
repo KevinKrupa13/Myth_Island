@@ -14,9 +14,8 @@ public class PlayerMovement : NetworkBehaviour
     public float airMultiplier;
 
     [Header("Crouching")]
-
-    public float crouchYScale;
-    private float startYScale;
+    public float crouchHeight;
+    private float startHeight;
 
     [Header("Movement Speeds")]
     public float sprintSpeed;
@@ -61,7 +60,7 @@ public class PlayerMovement : NetworkBehaviour
         moveZAnimationparameterID = Animator.StringToHash("MoveZ");
         rb.freezeRotation = true;
         readyToJump = true;
-        startYScale = transform.localScale.y;
+        startHeight = capsule.height;
     }
 
     private void Update()
@@ -109,12 +108,12 @@ public class PlayerMovement : NetworkBehaviour
         if (Input.GetKeyDown(crouchKey))
         {
             crouching = true;
-            transform.localScale = new Vector3(transform.localScale.x, crouchYScale, transform.localScale.z);
-            rb.AddForce(Vector3.down * 5f, ForceMode.Impulse);
+            capsule.height = crouchHeight;
+            //rb.AddForce(Vector3.down * 5f, ForceMode.Impulse);
         }
         else if (Input.GetKeyUp(crouchKey))
         {
-            transform.localScale = new Vector3(transform.localScale.x, startYScale, transform.localScale.z);
+            capsule.height = startHeight;
             crouching = false;
         }
     }

@@ -139,6 +139,10 @@ PrefabInstance:
       propertyPath: sprintSpeed
       value: 20
       objectReference: {fileID: 0}
+    - target: {fileID: 7651805006386336935, guid: 6c6e6d28a82c67f4088086773354eeea, type: 3}
+      propertyPath: crouchHeight
+      value: 0.5
+      objectReference: {fileID: 0}
     - target: {fileID: 7918080520231374953, guid: 6c6e6d28a82c67f4088086773354eeea, type: 3}
       propertyPath: m_RootOrder
       value: 0
