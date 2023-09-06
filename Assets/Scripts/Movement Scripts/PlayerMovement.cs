@@ -43,12 +43,22 @@ public class PlayerMovement : NetworkBehaviour
 
     int moveXAnimationParameterID;
     int moveZAnimationparameterID;
+    int stateAnimationParameterID;
 
     bool readyToJump = false;
     bool sprinting = false;
     bool walking = false;
     bool jumping = false;
     bool crouching = false;
+
+    enum state {
+        walking,
+        sprinting,
+        crouching,
+        jumping,
+    };
+
+    state currState = state.walking;
 
     private void Start()
     {
@@ -58,6 +68,7 @@ public class PlayerMovement : NetworkBehaviour
 
         moveXAnimationParameterID = Animator.StringToHash("MoveX");
         moveZAnimationparameterID = Animator.StringToHash("MoveZ");
+        stateAnimationParameterID = Animator.StringToHash("State");
         rb.freezeRotation = true;
         readyToJump = true;
         startHeight = capsule.height;
@@ -84,6 +95,7 @@ public class PlayerMovement : NetworkBehaviour
         if (!IsOwner) return;
         MovePlayer();
         AnimatePlayer();
+        print(currState);
     }
 
     private void MyInput()
@@ -102,19 +114,25 @@ public class PlayerMovement : NetworkBehaviour
             Invoke(nameof(ResetJump), jumpCooldown);
         }
 
-        sprinting = Input.GetKey(sprintKey);
+        if (Input.GetKeyDown(sprintKey)) {
+            currState = state.sprinting;
+        }
+
+        if (Input.GetKeyUp(sprintKey)) {
+            currState = state.walking;
+        }
 
         //Crouching Controls
         if (Input.GetKeyDown(crouchKey))
         {
-            crouching = true;
-            capsule.height = crouchHeight;
+            currState = state.crouching;
+            //capsule.height = crouchHeight;
             //rb.AddForce(Vector3.down * 5f, ForceMode.Impulse);
         }
         else if (Input.GetKeyUp(crouchKey))
         {
-            capsule.height = startHeight;
-            crouching = false;
+            //capsule.height = startHeight;
+            currState = state.walking;
         }
     }
 
@@ -126,11 +144,11 @@ public class PlayerMovement : NetworkBehaviour
         // on ground
         if (grounded)
         {
-            if (sprinting && !crouching)
+            if (currState == state.sprinting)
             {
                 rb.AddForce(moveDirection.normalized * sprintSpeed * 10f, ForceMode.Force);
             }
-            else if (crouching && !sprinting)
+            else if (currState == state.crouching)
             {
                 rb.AddForce(moveDirection.normalized * crouchSpeed * 10f, ForceMode.Force);
             }
@@ -144,7 +162,7 @@ public class PlayerMovement : NetworkBehaviour
         // in air
         else if (!grounded)
         {
-            if (sprinting)
+            if (currState == state.sprinting)
             {
                 rb.AddForce(moveDirection.normalized * moveSpeed * 10f * sprintSpeed * airMultiplier, ForceMode.Force);
             }
@@ -160,6 +178,7 @@ public class PlayerMovement : NetworkBehaviour
         if (!IsOwner) return;
         playerAnim.SetFloat(moveXAnimationParameterID, horizontalInput);
         playerAnim.SetFloat(moveZAnimationparameterID, verticalInput);
+        playerAnim.SetFloat(stateAnimationParameterID, (int) currState);
     }
 
     private void SpeedControl()
@@ -177,14 +196,14 @@ public class PlayerMovement : NetworkBehaviour
     private void Jump()
     {
         // reset y velocity
-        jumping = true;
+        currState = state.jumping;
         //rb.velocity = new Vector3(rb.velocity.x, 0f, rb.velocity.z);
         rb.AddForce(transform.up * jumpForce, ForceMode.Impulse);
     }
 
     private void ResetJump()
     {
-        jumping = false;
+        currState = state.walking;
         readyToJump = true;
     }
 }
