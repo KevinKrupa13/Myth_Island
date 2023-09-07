@@ -132,8 +132,20 @@ PrefabInstance:
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 7651805006386336935, guid: 6c6e6d28a82c67f4088086773354eeea, type: 3}
+      propertyPath: jumpForce
+      value: 20
+      objectReference: {fileID: 0}
+    - target: {fileID: 7651805006386336935, guid: 6c6e6d28a82c67f4088086773354eeea, type: 3}
+      propertyPath: moveSpeed
+      value: 2.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 7651805006386336935, guid: 6c6e6d28a82c67f4088086773354eeea, type: 3}
       propertyPath: playerAnim
       value: 
+      objectReference: {fileID: 0}
+    - target: {fileID: 7651805006386336935, guid: 6c6e6d28a82c67f4088086773354eeea, type: 3}
+      propertyPath: crouchSpeed
+      value: 2.5
       objectReference: {fileID: 0}
     - target: {fileID: 7651805006386336935, guid: 6c6e6d28a82c67f4088086773354eeea, type: 3}
       propertyPath: sprintSpeed

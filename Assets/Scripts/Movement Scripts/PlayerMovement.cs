@@ -11,7 +11,6 @@ public class PlayerMovement : NetworkBehaviour
     public float groundDrag;
     public float jumpForce;
     public float jumpCooldown;
-    public float airMultiplier;
 
     [Header("Crouching")]
     public float crouchHeight;
@@ -46,10 +45,6 @@ public class PlayerMovement : NetworkBehaviour
     int stateAnimationParameterID;
 
     bool readyToJump = false;
-    bool sprinting = false;
-    bool walking = false;
-    bool jumping = false;
-    bool crouching = false;
 
     enum state
     {
@@ -60,6 +55,7 @@ public class PlayerMovement : NetworkBehaviour
     };
 
     state currState = state.walking;
+    state prevState = state.walking;
 
     private void Start()
     {
@@ -166,15 +162,15 @@ public class PlayerMovement : NetworkBehaviour
         // in air
         else if (!grounded)
         {
-            if (currState == state.sprinting)
-            {
-                rb.AddForce(moveDirection.normalized * moveSpeed * 10f * sprintSpeed * airMultiplier, ForceMode.Force);
+            if (prevState == state.sprinting) {
+                rb.AddForce(moveDirection.normalized * sprintSpeed * 10f, ForceMode.Force);
             }
-            else
-            {
-                rb.AddForce(moveDirection.normalized * moveSpeed * 10f * airMultiplier, ForceMode.Force);
+
+            if (prevState == state.walking) {
+                rb.AddForce(moveDirection.normalized * moveSpeed * 10f, ForceMode.Force);
             }
         }
+
     }
 
     private void AnimatePlayer()
@@ -200,6 +196,7 @@ public class PlayerMovement : NetworkBehaviour
     private void Jump()
     {
         // reset y velocity
+        prevState = currState;
         currState = state.jumping;
         //rb.velocity = new Vector3(rb.velocity.x, 0f, rb.velocity.z);
         rb.AddForce(transform.up * jumpForce, ForceMode.Impulse);
@@ -207,7 +204,7 @@ public class PlayerMovement : NetworkBehaviour
 
     private void ResetJump()
     {
-        currState = state.walking;
+        currState = prevState;
         readyToJump = true;
     }
 }
