@@ -3,9 +3,17 @@ using System.Collections.Generic;
 using UnityEngine;
 using TMPro;
 using Unity.Netcode;
+using Unity.VisualScripting;
 
 public class PlayerMovement : NetworkBehaviour
 {
+
+    [Header("Animation")]
+    [SerializeField]
+    private float animationSmoothTime = 0.1f;
+    [SerializeField]
+    private float animationPlayTransition = 0.1f;
+
     [Header("Movement")]
     public float moveSpeed;
     public float groundDrag;
@@ -15,6 +23,7 @@ public class PlayerMovement : NetworkBehaviour
     [Header("Crouching")]
     public float crouchHeight;
     private float startHeight;
+    private Vector3 startCenter;
 
     [Header("Movement Speeds")]
     public float sprintSpeed;
@@ -39,10 +48,13 @@ public class PlayerMovement : NetworkBehaviour
     Rigidbody rb;
     CapsuleCollider capsule;
     Animator playerAnim;
-
+    int jumpAnimation;
     int moveXAnimationParameterID;
     int moveZAnimationparameterID;
     int stateAnimationParameterID;
+
+    Vector2 currentAnimationBlend;
+    Vector2 animationVelocity;
 
     bool readyToJump = false;
 
@@ -66,9 +78,11 @@ public class PlayerMovement : NetworkBehaviour
         moveXAnimationParameterID = Animator.StringToHash("MoveX");
         moveZAnimationparameterID = Animator.StringToHash("MoveZ");
         stateAnimationParameterID = Animator.StringToHash("State");
+        jumpAnimation = Animator.StringToHash("Pistol Jump");
         rb.freezeRotation = true;
         readyToJump = true;
         startHeight = capsule.height;
+        startCenter = capsule.center;
     }
 
     private void Update()
@@ -126,20 +140,24 @@ public class PlayerMovement : NetworkBehaviour
         {
             currState = state.crouching;
             capsule.height = crouchHeight;
-            capsule.center = new Vector3(0, capsule.height * 0.5f);
+            capsule.center = new Vector3(0, (capsule.height * 0.5f) - 0.2f);
         }
         else if (Input.GetKeyUp(crouchKey))
         {
             currState = state.walking;
             capsule.height = startHeight;
-            capsule.center = new Vector3(0, capsule.height * 0.5f);
+            capsule.center = startCenter;
         }
     }
 
     private void MovePlayer()
     {
         // calculate movement direction
-        moveDirection = orientation.forward * verticalInput + orientation.right * horizontalInput;
+        Vector2 input = new(horizontalInput, verticalInput);
+        currentAnimationBlend = Vector2.SmoothDamp(currentAnimationBlend, input, ref animationVelocity, animationSmoothTime);
+        float horizontalMoveDirection = horizontalInput == 0 ? 0f : currentAnimationBlend.x;
+        float verticalMoveDirection = verticalInput == 0 ? 0f : currentAnimationBlend.y;
+        moveDirection = orientation.forward * verticalMoveDirection + orientation.right * horizontalMoveDirection;
 
         // on ground
         if (grounded)
@@ -176,14 +194,14 @@ public class PlayerMovement : NetworkBehaviour
     private void AnimatePlayer()
     {
         if (!IsOwner) return;
-        playerAnim.SetFloat(moveXAnimationParameterID, horizontalInput);
-        playerAnim.SetFloat(moveZAnimationparameterID, verticalInput);
+        playerAnim.SetFloat(moveXAnimationParameterID, currentAnimationBlend.x);
+        playerAnim.SetFloat(moveZAnimationparameterID, currentAnimationBlend.y);
         playerAnim.SetFloat(stateAnimationParameterID, (int)currState);
     }
 
     private void SpeedControl()
     {
-        Vector3 flatVel = new Vector3(rb.velocity.x, 0f, rb.velocity.z);
+        Vector3 flatVel = new(rb.velocity.x, 0f, rb.velocity.z);
 
         // limit velocity if needed
         if (flatVel.magnitude > moveSpeed)
@@ -200,6 +218,7 @@ public class PlayerMovement : NetworkBehaviour
         currState = state.jumping;
         //rb.velocity = new Vector3(rb.velocity.x, 0f, rb.velocity.z);
         rb.AddForce(transform.up * jumpForce, ForceMode.Impulse);
+        playerAnim.CrossFade(jumpAnimation, animationPlayTransition);
     }
 
     private void ResetJump()
