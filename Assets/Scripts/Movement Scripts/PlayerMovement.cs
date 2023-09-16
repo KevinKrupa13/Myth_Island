@@ -104,9 +104,9 @@ public class PlayerMovement : NetworkBehaviour
     private void FixedUpdate()
     {
         if (!IsOwner) return;
+        print(this.transform.position.y);
         MovePlayer();
         AnimatePlayer();
-        print(currState);
     }
 
     private void MyInput()
