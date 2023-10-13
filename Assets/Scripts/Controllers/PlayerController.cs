@@ -1,13 +1,11 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using TMPro;
 using Unity.Netcode;
 using Unity.VisualScripting;
 
-public class PlayerMovement : NetworkBehaviour
+public class PlayerController : NetworkBehaviour
 {
-
     [Header("Animation")]
     [SerializeField]
     private float animationSmoothTime = 0.1f;
@@ -15,33 +13,66 @@ public class PlayerMovement : NetworkBehaviour
     private float animationPlayTransition = 0.1f;
 
     [Header("Movement")]
-    public float moveSpeed;
-    public float groundDrag;
-    public float jumpForce;
-    public float jumpCooldown;
+    [SerializeField]
+    private float moveSpeed;
+    [SerializeField]
+    private float groundDrag;
+    [SerializeField]
+    private float jumpForce;
+    [SerializeField]
+    private float jumpCooldown;
 
     [Header("Crouching")]
-    public float crouchHeight;
-    private float startHeight;
-    private Vector3 startCenter;
+    [SerializeField]
+    private float crouchHeight;
 
     [Header("Movement Speeds")]
-    public float sprintSpeed;
-    public float crouchSpeed;
+    [SerializeField]
+    private float sprintSpeed;
+    [SerializeField]
+    private float crouchSpeed;
 
     [Header("Keybinds")]
-    public KeyCode jumpKey = KeyCode.Space;
-    public KeyCode sprintKey = KeyCode.LeftShift;
-    public KeyCode crouchKey = KeyCode.LeftControl;
-    
+    [SerializeField]
+    private KeyCode jumpKey = KeyCode.Space;
+    [SerializeField]
+    private KeyCode sprintKey = KeyCode.LeftShift;
+    [SerializeField]
+    private KeyCode crouchKey = KeyCode.LeftControl;
+    [SerializeField]
+    private KeyCode aimKey = KeyCode.Mouse1;
+    [SerializeField]
+    private KeyCode shootKey = KeyCode.Mouse0;
 
     [Header("Ground Check")]
-    public float playerHeight;
-    public LayerMask whatIsGround;
-    bool grounded;
+    [SerializeField]
+    private float playerHeight;
+    [SerializeField]
+    private LayerMask whatIsGround;
 
-    [Header("Objects")]
-    public Transform orientation;
+    [Header("Aim")]
+    [SerializeField]
+    private Transform aimTarget;
+    [SerializeField]
+    private float aimDistance = 1f;
+    [SerializeField]
+    private Canvas hipCanvas;
+    [SerializeField]
+    private Canvas aimCanvas;
+
+    [Header("Camera")]
+    [SerializeField]
+    private Transform cameraPosition;
+    [SerializeField]
+    private GameObject cameraObject;
+
+    [Header("Mouse")]
+    [SerializeField]
+    private float mouseSensitivity = 100f;
+
+    [Header("Orientation")]
+    [SerializeField]
+    private Transform orientation;
 
     float horizontalInput;
     float verticalInput;
@@ -53,11 +84,20 @@ public class PlayerMovement : NetworkBehaviour
     int moveXAnimationParameterID;
     int moveZAnimationparameterID;
     int stateAnimationParameterID;
-
     Vector2 currentAnimationBlend;
     Vector2 animationVelocity;
 
+    // Camera Constants
+    float xRotation = 0f;
+    float YRotation = 0f;
+    Camera cam;
+    AudioListener aud;
+
+    float startHeight;
+    Vector3 startCenter;
+
     bool readyToJump = false;
+    bool grounded;
 
     enum state
     {
@@ -72,9 +112,13 @@ public class PlayerMovement : NetworkBehaviour
 
     private void Start()
     {
+        Cursor.lockState = CursorLockMode.Locked;
+
         rb = GetComponent<Rigidbody>();
         capsule = GetComponent<CapsuleCollider>();
         playerAnim = GetComponent<Animator>();
+        cam = cameraObject.GetComponent<Camera>();
+        aud = cameraObject.GetComponent<AudioListener>();
 
         moveXAnimationParameterID = Animator.StringToHash("MoveX");
         moveZAnimationparameterID = Animator.StringToHash("MoveZ");
@@ -82,6 +126,8 @@ public class PlayerMovement : NetworkBehaviour
         jumpAnimation = Animator.StringToHash("Pistol Jump");
         rb.freezeRotation = true;
         readyToJump = true;
+        aimCanvas.enabled = false;
+        hipCanvas.enabled = true;
         startHeight = capsule.height;
         startCenter = capsule.center;
     }
@@ -94,6 +140,9 @@ public class PlayerMovement : NetworkBehaviour
 
         MyInput();
         SpeedControl();
+        UpdateCamera();
+        UpdateRemyRotation();
+        Aim();
 
         // handle drag
         if (grounded)
@@ -105,7 +154,6 @@ public class PlayerMovement : NetworkBehaviour
     private void FixedUpdate()
     {
         if (!IsOwner) return;
-        print(this.transform.position.y);
         MovePlayer();
         AnimatePlayer();
     }
@@ -120,22 +168,17 @@ public class PlayerMovement : NetworkBehaviour
         if (Input.GetKey(jumpKey) && readyToJump && grounded)
         {
             readyToJump = false;
-
             Jump();
-
             Invoke(nameof(ResetJump), jumpCooldown);
         }
-
         if (Input.GetKeyDown(sprintKey))
         {
             currState = state.sprinting;
         }
-
         if (Input.GetKeyUp(sprintKey))
         {
             currState = state.walking;
         }
-
         //Crouching Controls
         if (Input.GetKeyDown(crouchKey))
         {
@@ -226,5 +269,59 @@ public class PlayerMovement : NetworkBehaviour
     {
         currState = prevState;
         readyToJump = true;
+    }
+
+    private void UpdateCamera() {
+        if (!IsOwner) return;
+        cam.enabled = true;
+        aud.enabled = true;
+        aimTarget.position = cam.transform.position + cam.transform.forward * aimDistance;
+        cameraObject.transform.position = cameraPosition.position;
+        float mouseX = Input.GetAxis("Mouse X") * mouseSensitivity * Time.deltaTime;
+        float mouseY = Input.GetAxis("Mouse Y") * mouseSensitivity * Time.deltaTime;
+    
+        //control rotation around x axis (Look up and down)
+        xRotation -= mouseY;
+    
+        //we clamp the rotation so we cant Over-rotate (like in real life)
+        xRotation = Mathf.Clamp(xRotation, -90f, 90f);
+    
+        //control rotation around y axis (Look up and down)
+        YRotation += mouseX;
+    
+        //applying both rotations
+        cameraObject.transform.localRotation = Quaternion.Euler(xRotation, 0f, 0f);
+        //transform.localRotation = Quaternion.Euler(0f, yRotation, 0f);
+    }
+
+    private void Aim() {
+        if (!IsOwner) return;
+        if (Input.GetKeyDown(aimKey)) {
+            aimCanvas.enabled = true;
+            hipCanvas.enabled = false;
+        }
+
+        if (Input.GetKeyUp(aimKey)) {
+            aimCanvas.enabled = false;
+            hipCanvas.enabled = true;
+        }
+    }
+
+    private void UpdateRemyRotation() {
+        float mouseX = Input.GetAxis("Mouse X") * mouseSensitivity * Time.deltaTime;
+        float mouseY = Input.GetAxis("Mouse Y") * mouseSensitivity * Time.deltaTime;
+ 
+        //control rotation around x axis (Look up and down)
+        xRotation -= mouseY;
+ 
+        //we clamp the rotation so we cant Over-rotate (like in real life)
+        xRotation = Mathf.Clamp(xRotation, -90f, 90f);
+ 
+        //control rotation around y axis (Look up and down)
+        YRotation += mouseX;
+ 
+        //applying both rotations
+        transform.localRotation = Quaternion.Euler(0f, YRotation, 0f);
+        //transform.localRotation = Quaternion.Euler(0f, yRotation, 0f);
     }
 }

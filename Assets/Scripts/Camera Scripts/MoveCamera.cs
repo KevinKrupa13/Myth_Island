@@ -5,6 +5,8 @@ using Unity.Netcode;
 
 public class MoveCamera : NetworkBehaviour
 {
+    [Header("Decals")]
+
     [Header("Aim")]
     [SerializeField]
     private Transform aimTarget;
@@ -23,6 +25,7 @@ public class MoveCamera : NetworkBehaviour
 
     [Header("Keybinds")]
     public KeyCode aimKey = KeyCode.Mouse1;
+    public KeyCode shootKey = KeyCode.Mouse0;
  
     float xRotation = 0f;
     float YRotation = 0f;
@@ -62,6 +65,7 @@ public class MoveCamera : NetworkBehaviour
         //transform.localRotation = Quaternion.Euler(0f, yRotation, 0f);
 
         Aim();
+        ShootGun();
  
     }
 
@@ -75,5 +79,9 @@ public class MoveCamera : NetworkBehaviour
         aimCanvas.enabled = false;
         hipCanvas.enabled = true;
       }
+    }
+
+    private void ShootGun() {
+
     }
 }
